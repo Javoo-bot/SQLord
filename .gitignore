@@ -1,0 +1,21 @@
+# Ignorar archivos de entornos de Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Ignorar entornos de conda
+/env/
+.env/
+
+# Ignorar archivos de Jupyter Notebook
+.ipynb_checkpoints/
+
+# Ignorar archivos de configuración y logs
+.vscode/
+.DS_Store
+*.log
+*.sqlite3
+
+# Ignorar archivos sensibles como credenciales
+config.json
+credentials.json
