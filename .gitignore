@@ -6,7 +6,7 @@ __pycache__/
 # Ignorar entornos de conda
 /env/
 .env/
-
+/Docu/
 # Ignorar archivos de Jupyter Notebook
 .ipynb_checkpoints/
 
