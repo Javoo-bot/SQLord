@@ -1,6 +1,7 @@
 # SQLord 📊🗃️
 
 ## Description
+
 This project converts unstructured data (Word and Excel files) from SharePoint into an SQL database for efficient querying. 🎯
 
 ## Technologies
