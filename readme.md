@@ -63,6 +63,11 @@ Automate data extraction from documents and store them in SQL for quick and stru
    - No me deja usar Vision LLm porque tengo poco contexto. Mi idea de analizar imagenes y texto no funciona. Quizas es por poca capacidad del modelo.Pasamos a LLM imagen
    - Vamos a usar un modelo LLM para analizar solo las imagenes
    - Añadir procesamiento de imagenes a DocPicture
+   - En vez de almacenar imagenes las puedo pasar como informacino binaria porque total voy a cargarlas en el LLM.
+
+10. **Upgrade enfoque**
+   -En vez de subir a sql, subir directamente a PostgreSQL
+   -Continuamos en carpeta Tribe 
 
 ## Reminder
 

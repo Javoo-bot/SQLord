@@ -1,10 +1,9 @@
 import os
 from dotenv import load_dotenv
 from together import Together
-from docx import Document
-from schema import folder_path
-import queue
 from spire.doc import Document, DocPicture, ICompositeObject
+import queue
+from schema import file
 
 # Load environment variables
 load_dotenv()
@@ -15,15 +14,12 @@ client = Together(api_key=TOGETHER_API_KEY)
 
 
 # Function to extract images from Word document
-def extract_images(file_path, output_path):
+def extract_images(file_path):
     # Load the Word document
     doc = Document()
     doc.LoadFromFile(file_path)
 
-    # List to hold the image file paths
     images = []
-
-    # Queue to traverse the document elements
     nodes = queue.Queue()
     nodes.put(doc)
 
@@ -34,18 +30,12 @@ def extract_images(file_path, output_path):
             obj = node.ChildObjects[i]
 
             if isinstance(obj, DocPicture):
-                # Extract the image data (binary format)
-                image_data = obj.ImageBytes  # Get the image data as binary bytes
+                # Extract the image binary data
+                image_data = obj.ImageBytes
 
                 if image_data:
-                    # Define the image file name and path
-                    image_path = os.path.join(output_path, f"image_{len(images) + 1}.png")
-
-                    # Save the binary data as an image file
-                    with open(image_path, "wb") as image_file:
-                        image_file.write(image_data)  # Write binary data to file
-
-                    images.append(image_path)
+                    # Append the image data directly to the list (no saving to disk)
+                    images.append(image_data)
 
             # If the object has child nodes, add it to the queue for further traversal
             elif isinstance(obj, ICompositeObject):
@@ -68,51 +58,38 @@ def generate_prompt_for_image(image_name):
     - Recs: Recommendations for avoiding or fixing mistakes.
     - Fix: Specific steps to correct errors.
     - Impact: What will happen if things go wrong.
-    
+
     Format your response like:
-    
+
     [Task Name] - [Correct steps] - [Expected result] - [Common mistakes] - [Error messages] - [Recommendations]
-    
-    Image: {image_name}
-    
-    Please format the response according to this structure.
     """
     return prompt
 
 
-# Function to analyze an image using the FLUX.1-schnell model
-def analyze_image_with_flux(image_path, prompt):
-    # Send the image analysis request to Together AI model
+# Function to pass image data to LLM and generate structured output
+def analyze_image_with_llm(image_data, image_name):
+    prompt = generate_prompt_for_image(image_name)
+
+    # Send image binary data and prompt to Together AI's LLM
+    # Assuming that Together AI's LLM can handle image data (this depends on the LLM's capabilities)
     response = client.chat.completions.create(
-        model="black-forest-labs/FLUX.1-schnell",  # The image model
-        messages=[{"role": "user", "content": prompt}],  # Use the custom prompt
+        model="black-forest-labs/FLUX.1-schnell",  # Example model for images
+        messages=[{"role": "user", "content": prompt}],
         max_tokens=1000,
     )
+
+    # Return the structured response from the LLM
     return response.choices[0].message.content
 
 
-# Specify the folder containing the Word documents
-folder_path = r"C:\Users\jlmenendez\Desktop\db\Docu"
+# Save LLM responses to a text file
+def save_to_text_file(responses, output_file):
+    with open(output_file, "w") as f:
+        for idx, response in enumerate(responses):
+            f.write(f"Image {idx + 1}:\n")
+            f.write(response + "\n\n")
 
-# Process each Word file
-word_files = [f for f in os.listdir(folder_path) if f.endswith(".docx")]
 
-# Output file for storing analysis results
-output_filename = "flux_image_analysis_output.txt"
-with open(output_filename, "w") as f_out:
-    for word_file in word_files:
-        full_path = os.path.join(folder_path, word_file)
-        images = extract_images(full_path)
-
-        for image_path in images:
-            # Generate the structured prompt for the image
-            prompt = generate_prompt_for_image(image_path)
-
-            # Analyze the image using the FLUX model
-            analysis_result = analyze_image_with_flux(image_path, prompt)
-
-            # Save the structured output
-            f_out.write(f"Image: {image_path}\n")
-            f_out.write(f"Analysis:\n{analysis_result}\n\n")
-
-    print(f"Structured output saved to {output_filename}")
+# Example usage
+file_path = "Template.docx"
+output_file = "llm_analysis_output.txt"
