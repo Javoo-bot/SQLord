@@ -14,55 +14,53 @@ TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
 client = Together(api_key=TOGETHER_API_KEY)
 
 
-# Function to extract text and images from Word document
-def extract_text_and_images(folder_path):
-    # Load the document
+# Function to extract images from Word document
+def extract_images(file_path, output_path):
+    # Load the Word document
     doc = Document()
-    doc.LoadFromFile(folder_path)
+    doc.LoadFromFile(file_path)
 
-    data = []
+    # List to hold the image file paths
+    images = []
 
-    # Initialize a queue to store document elements for traversal
+    # Queue to traverse the document elements
     nodes = queue.Queue()
     nodes.put(doc)
 
-    # Traverse through the document elements
+    # Traverse through the document elements to find images
     while not nodes.empty():
         node = nodes.get()
         for i in range(node.ChildObjects.Count):
             obj = node.ChildObjects[i]
-            # Find the images
+
             if isinstance(obj, DocPicture):
-                picture = obj
+                # Extract the image data (binary format)
+                image_data = obj.ImageBytes  # Get the image data as binary bytes
 
-                # Retrieve the text from the paragraph before the image (if available)
-                associated_text = None
-                # Try to get the text from the previous sibling node if available
-                if i > 0:
-                    previous_obj = node.ChildObjects[i - 1]
-                    if hasattr(previous_obj, "Text"):
-                        associated_text = previous_obj.Text
-                # If no text was found, add a placeholder
-                if not associated_text:
-                    associated_text = "No text found"
+                if image_data:
+                    # Define the image file name and path
+                    image_path = os.path.join(output_path, f"image_{len(images) + 1}.png")
 
-                # Append the image and associated text to the list
-                data.append({"image": f"Image {len(data)+1}", "text": associated_text})
+                    # Save the binary data as an image file
+                    with open(image_path, "wb") as image_file:
+                        image_file.write(image_data)  # Write binary data to file
 
-            # If it's a composite object (has children), add it to the queue for further traversal
+                    images.append(image_path)
+
+            # If the object has child nodes, add it to the queue for further traversal
             elif isinstance(obj, ICompositeObject):
                 nodes.put(obj)
 
-    # Close the document when done
+    # Close the document
     doc.Close()
 
-    return data
+    return images
 
 
-# Function to generate prompt for the LLM
-def generate_prompt(text):
+# Function to generate prompt for LLM using the image
+def generate_prompt_for_image(image_name):
     prompt = f"""
-    Based on the following text, extract the instructions and categorize them into the following format:
+    Based on the analysis of the image "{image_name}", extract the instructions and categorize them into the following format:
     - Correct: The exact step-by-step process that is correct.
     - Result OK: The expected successful outcome.
     - Incorrect: Common mistakes or incorrect steps.
@@ -70,44 +68,51 @@ def generate_prompt(text):
     - Recs: Recommendations for avoiding or fixing mistakes.
     - Fix: Specific steps to correct errors.
     - Impact: What will happen if things go wrong.
-
-    Text: {text}
-
+    
     Format your response like:
     
     [Task Name] - [Correct steps] - [Expected result] - [Common mistakes] - [Error messages] - [Recommendations]
     
-    Format your response as a single string with the above structure.
+    Image: {image_name}
+    
+    Please format the response according to this structure.
     """
     return prompt
 
-# List all files in the folder and filter for .docx files
-word_files = [f for f in os.listdir(folder_path) if f.endswith(".docx")]
+
+# Function to analyze an image using the FLUX.1-schnell model
+def analyze_image_with_flux(image_path, prompt):
+    # Send the image analysis request to Together AI model
+    response = client.chat.completions.create(
+        model="black-forest-labs/FLUX.1-schnell",  # The image model
+        messages=[{"role": "user", "content": prompt}],  # Use the custom prompt
+        max_tokens=1000,
+    )
+    return response.choices[0].message.content
+
+
+# Specify the folder containing the Word documents
+folder_path = r"C:\Users\jlmenendez\Desktop\db\Docu"
 
 # Process each Word file
-for word_file in word_files:
-    full_path = os.path.join(folder_path, word_file)
+word_files = [f for f in os.listdir(folder_path) if f.endswith(".docx")]
 
-    # Extract text and images from the document
-    data = extract_text_and_images(full_path)
+# Output file for storing analysis results
+output_filename = "flux_image_analysis_output.txt"
+with open(output_filename, "w") as f_out:
+    for word_file in word_files:
+        full_path = os.path.join(folder_path, word_file)
+        images = extract_images(full_path)
 
-    for idx, entry in enumerate(data):
-        # Generate prompt for LLM
-        prompt = generate_prompt(entry["text"])
+        for image_path in images:
+            # Generate the structured prompt for the image
+            prompt = generate_prompt_for_image(image_path)
 
-        # Send prompt to LLM and retrieve response
-        response = client.chat.completions.create(
-            model="meta-llama/Meta-Llama-3.1-70B-Instruct",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=1000,
-        )
+            # Analyze the image using the FLUX model
+            analysis_result = analyze_image_with_flux(image_path, prompt)
 
-        # Get the response content (formatted string)
-        structured_string = response.choices[0].message.content.strip()
+            # Save the structured output
+            f_out.write(f"Image: {image_path}\n")
+            f_out.write(f"Analysis:\n{analysis_result}\n\n")
 
-        # Save the structured string to a file
-        output_filename = f"{word_file}_image_{idx+1}_instructions.txt"
-        with open(output_filename, "w") as f:
-            f.write(structured_string)
-
-        print(f"Structured instruction string for image {idx+1} saved to {output_filename}")
+    print(f"Structured output saved to {output_filename}")

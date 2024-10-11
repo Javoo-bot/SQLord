@@ -57,7 +57,15 @@ Automate data extraction from documents and store them in SQL for quick and stru
    - Añadir error sino sigo la intruccion
    - Paso fundamental: Chatgpt es capaz de entender una imagen inventada sobre procedimientos y crear instrucciones
    - Es mejor almacenar y estructurar los datos de manera clara (diferenciando entre imágenes y texto) antes de pasárselos al modelo de lenguaje (LLM)
+   - Truco 1: si tengo el mismo modelo en dos scripts se ejecuta en las dos pantallas a la vez
+   - El modelo LLM aunque sea vision necesita texto para contextualizar la imagen porque sino no puede analizarla
+   - link: [def]
+   - No me deja usar Vision LLm porque tengo poco contexto. Mi idea de analizar imagenes y texto no funciona. Quizas es por poca capacidad del modelo.Pasamos a LLM imagen
+   - Vamos a usar un modelo LLM para analizar solo las imagenes
+   - Añadir procesamiento de imagenes a DocPicture
 
 ## Reminder
 
 Have fun querying your data! 😎
+
+[def]: https://medium.com/@alice.yang_10652/extract-images-from-word-documents-with-python-88144ca3c35e

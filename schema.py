@@ -46,9 +46,9 @@ response = client.chat.completions.create(
 #print(response.choices[0].message.content)
 
 # Save schema to a file (JSON format)
-schema = response.choices[0].message.content
-schema_filename = f"{word_file}_schema.json"
-with open(schema_filename, "w") as f:
-    json.dump({"schema": schema}, f)
+#schema = response.choices[0].message.content
+#schema_filename = f"{word_file}_schema.json"
+#with open(schema_filename, "w") as f:
+#    json.dump({"schema": schema}, f)
 
-print(f"Schema saved to {schema_filename}")
+#print(f"Schema saved to {schema_filename}")
