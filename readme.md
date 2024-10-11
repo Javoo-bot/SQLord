@@ -56,6 +56,7 @@ Automate data extraction from documents and store them in SQL for quick and stru
    - Puedo añadir nivel de importancia de la intruccion
    - Añadir error sino sigo la intruccion
    - Paso fundamental: Chatgpt es capaz de entender una imagen inventada sobre procedimientos y crear instrucciones
+   - Es mejor almacenar y estructurar los datos de manera clara (diferenciando entre imágenes y texto) antes de pasárselos al modelo de lenguaje (LLM)
 
 ## Reminder
 
