@@ -51,6 +51,12 @@ Automate data extraction from documents and store them in SQL for quick and stru
    - Para ejecutar una consulta, selecciona el fragmento de código correspondiente y utiliza la opción **Run Selected Query**.
    - Es importante ejecutar las consultas en porciones seleccionadas para evitar errores de ejecución.
 
+9. **Enriquecer tabla**
+   - En vez de procesar el texto como esquemas voy a añadir un paso intermedio que es crear a partir de las imagenes texto que contenga instrucciones
+   - Puedo añadir nivel de importancia de la intruccion
+   - Añadir error sino sigo la intruccion
+   - Paso fundamental: Chatgpt es capaz de entender una imagen inventada sobre procedimientos y crear instrucciones
+
 ## Reminder
 
 Have fun querying your data! 😎
