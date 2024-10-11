@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from together import Together
 from docx import Document
+import json
 
 # Load environment variables
 load_dotenv()
@@ -13,12 +14,10 @@ TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
 # Initialize Together client
 client = Together(api_key=TOGETHER_API_KEY)
 
-
 # Function to extract text from Word document
 def extract_text_from_word(file_path):
     doc = Document(file_path)
     return "\n".join([p.text for p in doc.paragraphs])
-
 
 # Specify the folder containing the Word documents
 folder_path = "./Docu"
@@ -44,4 +43,12 @@ response = client.chat.completions.create(
 )
 
 # Print the LLM's response (SQL table schema)
-print(response.choices[0].message.content)
+#print(response.choices[0].message.content)
+
+# Save schema to a file (JSON format)
+schema = response.choices[0].message.content
+schema_filename = f"{word_file}_schema.json"
+with open(schema_filename, "w") as f:
+    json.dump({"schema": schema}, f)
+
+print(f"Schema saved to {schema_filename}")

@@ -1,65 +1,141 @@
--- Crear la tabla UnidadesOrganizativas
-CREATE TABLE IF NOT EXISTS UnidadesOrganizativas (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nombre VARCHAR(255) NOT NULL,
-    Dominio VARCHAR(255),
-    UNIQUE(Nombre)
+-- Crear tabla Unidades Organizativas (OU)
+CREATE TABLE OU (
+    idOU INT PRIMARY KEY,
+    nombre VARCHAR(50),
+    descripcion TEXT,
+    padre_idOU INT
+);
+-- Crear tabla Usuarios
+CREATE TABLE Usuarios (
+    idUsuario INT PRIMARY KEY,
+    nombre VARCHAR(50),
+    apellidos VARCHAR(50),
+    email VARCHAR(100),
+    password VARCHAR(50),
+    OU_idOU INT,
+    msDScloudExtensionAttribute1 VARCHAR(100)
+);
+-- Crear tabla Grupos
+CREATE TABLE Grupos (
+    idGrupo INT PRIMARY KEY,
+    nombre VARCHAR(50),
+    descripcion TEXT,
+    OU_idOU INT
+);
+-- Crear tabla Sincronización
+CREATE TABLE Sincronizacion (
+    idSincronizacion INT PRIMARY KEY,
+    fecha_sincronizacion DATETIME,
+    resultado_sincronizacion VARCHAR(20)
+);
+-- Crear tabla Dispositivos
+CREATE TABLE Dispositivos (
+    idDispositivo INT PRIMARY KEY,
+    nombre VARCHAR(100),
+    tipo_dispositivo VARCHAR(50),
+    estado_dispositivo VARCHAR(20),
+    usuario_principal INT
+);
+-- Crear tabla Licencias
+CREATE TABLE Licencias (
+    idLicencia INT PRIMARY KEY,
+    nombre VARCHAR(100),
+    descripcion TEXT,
+    grupo_idGrupo INT
 );
 
--- Crear la tabla Objetos
-CREATE TABLE IF NOT EXISTS Objetos (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nombre VARCHAR(255) NOT NULL,
-    Tipo VARCHAR(50) CHECK (Tipo IN ('usuario', 'computadora', 'grupo')),
-    UnidadOrganizativaId INTEGER,
-    FOREIGN KEY (UnidadOrganizativaId) REFERENCES UnidadesOrganizativas(Id)
-);
+SELECT name
+FROM sqlite_master
+WHERE type = 'table';
 
--- Crear la tabla Sincronizaciones
-CREATE TABLE IF NOT EXISTS Sincronizaciones (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    FechaSincronización DATETIME NOT NULL,
-    Resultado VARCHAR(255)
-);
+-- Insertar datos en la tabla OU
+INSERT INTO OU (idOU, nombre, descripcion, padre_idOU)
+VALUES (
+        1,
+        'AAD-Synced',
+        'Unidad organizativa para sincronizar con Azure AD',
+        NULL
+    ),
+    (
+        2,
+        'Usuarios',
+        'Unidad organizativa para usuarios',
+        1
+    ),
+    (
+        3,
+        'Grupos',
+        'Unidad organizativa para grupos',
+        1
+    );
+-- Insertar datos en la tabla Usuarios
+INSERT INTO Usuarios (
+        idUsuario,
+        nombre,
+        apellidos,
+        email,
+        password,
+        OU_idOU,
+        msDScloudExtensionAttribute1
+    )
+VALUES (
+        1,
+        'domuser2',
+        'apellidos',
+        'domuser2@castur.local',
+        'contraseña',
+        2,
+        'domuser2@castur.onmicrosoft.com'
+    ),
+    (
+        2,
+        'oturuser1',
+        'apellidos',
+        'oturuser1@castur.local',
+        'contraseña',
+        2,
+        'oturuser1@castur.onmicrosoft.com'
+    );
+-- Insertar datos en la tabla Grupos
+INSERT INTO Grupos (idGrupo, nombre, descripcion, OU_idOU)
+VALUES (1, 'Otur', 'Grupo para usuarios de Otur', 3),
+    (
+        2,
+        'F1_Intune',
+        'Grupo para asignar licencias F1 de Intune',
+        3
+    );
+-- Insertar datos en la tabla Sincronizacion
+INSERT INTO Sincronizacion (
+        idSincronizacion,
+        fecha_sincronizacion,
+        resultado_sincronizacion
+    )
+VALUES (1, '2023-02-20 10:00:00', 'éxito'),
+    (2, '2023-02-20 11:00:00', 'éxito');
+-- Insertar datos en la tabla Dispositivos
+INSERT INTO Dispositivos (
+        idDispositivo,
+        nombre,
+        tipo_dispositivo,
+        estado_dispositivo,
+        usuario_principal
+    )
+VALUES (
+        1,
+        'Equipo de pruebas',
+        'computadora',
+        'corporativo',
+        1
+    ),
+    (
+        2,
+        'Equipo personal',
+        'computadora',
+        'personal',
+        2
+    );
 
--- Crear la tabla Usuarios
-CREATE TABLE IF NOT EXISTS Usuarios (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nombre VARCHAR(255) NOT NULL,
-    UsuarioPrincipalName VARCHAR(255),
-    ms_DS_cloudExtensionAttribute1 VARCHAR(255),
-    UnidadOrganizativaId INTEGER,
-    FOREIGN KEY (UnidadOrganizativaId) REFERENCES UnidadesOrganizativas(Id)
-);
-
--- Crear la tabla Grupos
-CREATE TABLE IF NOT EXISTS Grupos (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nombre VARCHAR(255) NOT NULL,
-    UnidadOrganizativaId INTEGER,
-    FOREIGN KEY (UnidadOrganizativaId) REFERENCES UnidadesOrganizativas(Id)
-);
-
--- Crear la tabla Equipos
-CREATE TABLE IF NOT EXISTS Equipos (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Nombre VARCHAR(255) NOT NULL,
-    VersiónSistema VARCHAR(255),
-    TipoPropiedad VARCHAR(50) CHECK (TipoPropiedad IN ('personal', 'corporativo')),
-    UsuarioPrimarioId INTEGER,
-    FOREIGN KEY (UsuarioPrimarioId) REFERENCES Usuarios(Id)
-);
-
--- Crear índices para mejorar el rendimiento de las consultas
-CREATE INDEX IF NOT EXISTS idx_unidades_organ_name ON UnidadesOrganizativas(Nombre);
-CREATE INDEX IF NOT EXISTS idx_objetos_name_tipo ON Objetos(Nombre, Tipo, UnidadOrganizativaId);
-CREATE INDEX IF NOT EXISTS idx_sincronizaciones_fecha ON Sincronizaciones(FechaSincronización);
-CREATE INDEX IF NOT EXISTS idx_usuarios_name_attr ON Usuarios(Nombre, UsuarioPrincipalName, ms_DS_cloudExtensionAttribute1);
-CREATE INDEX IF NOT EXISTS idx_grupos_name_unidad ON Grupos(Nombre, UnidadOrganizativaId);
-CREATE INDEX IF NOT EXISTS idx_equipos_nombre_sistema ON Equipos(Nombre, VersiónSistema, TipoPropiedad);
-
-SELECT name FROM sqlite_master WHERE type='table';
-
-DELETE FROM sqlite_sequence;
-
-
+-- Insertar datos en la tabla Licencias
+INSERT INTO Licencias (idLicencia, nombre, descripcion, grupo_idGrupo)
+VALUES (1, 'F1_Intune', 'Licencia F1 de Intune', 2);
